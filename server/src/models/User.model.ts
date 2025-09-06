@@ -54,7 +54,7 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-UserSchema.index({ email: 1 });
+// Removed redundant non-unique email index; unique index is created from the schema field above
 UserSchema.index({ createdAt: -1 });
 
 export default mongoose.model<IUser>('User', UserSchema);

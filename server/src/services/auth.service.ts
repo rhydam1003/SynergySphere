@@ -38,13 +38,13 @@ export class AuthService {
     });
 
     const accessToken = generateToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       roles: user.roles,
     });
 
     const refreshToken = generateRefreshToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       roles: user.roles,
     });
@@ -65,13 +65,13 @@ export class AuthService {
     }
 
     const accessToken = generateToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       roles: user.roles,
     });
 
     const refreshToken = generateRefreshToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       roles: user.roles,
     });

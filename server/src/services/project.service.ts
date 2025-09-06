@@ -45,7 +45,8 @@ export class ProjectService {
   async getProjectForUser(projectId: string, userId: string) {
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw new NotFoundError('Project not found');
-    const isMember = project.owner.equals(userId) || project.members.some(m => m.user.equals(userId));
+    const isMember =
+      project.owner.equals(userId) || project.members.some(m => m.user.equals(userId));
     if (!isMember) throw new AuthorizationError('Not a project member');
     return project;
   }
@@ -69,21 +70,57 @@ export class ProjectService {
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw new NotFoundError('Project not found');
     if (!project.owner.equals(userId)) throw new AuthorizationError('Only owner can add members');
-    return this.projectRepo.addMember(projectId, memberId, role);
+    const updated = await this.projectRepo.addMember(projectId, memberId, role);
+    if (updated) {
+      await this.activityRepo.create({
+        project: updated._id as any,
+        type: 'project.member_added',
+        actor: new Types.ObjectId(userId),
+        entityRef: new Types.ObjectId(memberId),
+        meta: { role },
+      } as any);
+    }
+    return updated;
   }
 
-  async updateMember(projectId: string, userId: string, memberId: string, role: 'manager' | 'member') {
+  async updateMember(
+    projectId: string,
+    userId: string,
+    memberId: string,
+    role: 'manager' | 'member'
+  ) {
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw new NotFoundError('Project not found');
-    if (!project.owner.equals(userId)) throw new AuthorizationError('Only owner can update members');
-    return this.projectRepo.updateMember(projectId, memberId, role);
+    if (!project.owner.equals(userId))
+      throw new AuthorizationError('Only owner can update members');
+    const updated = await this.projectRepo.updateMember(projectId, memberId, role);
+    if (updated) {
+      await this.activityRepo.create({
+        project: updated._id as any,
+        type: 'project.member_role_updated',
+        actor: new Types.ObjectId(userId),
+        entityRef: new Types.ObjectId(memberId),
+        meta: { role },
+      } as any);
+    }
+    return updated;
   }
 
   async removeMember(projectId: string, userId: string, memberId: string) {
     const project = await this.projectRepo.findById(projectId);
     if (!project) throw new NotFoundError('Project not found');
-    if (!project.owner.equals(userId)) throw new AuthorizationError('Only owner can remove members');
-    return this.projectRepo.removeMember(projectId, memberId);
+    if (!project.owner.equals(userId))
+      throw new AuthorizationError('Only owner can remove members');
+    const updated = await this.projectRepo.removeMember(projectId, memberId);
+    if (updated) {
+      await this.activityRepo.create({
+        project: updated._id as any,
+        type: 'project.member_removed',
+        actor: new Types.ObjectId(userId),
+        entityRef: new Types.ObjectId(memberId),
+      } as any);
+    }
+    return updated;
   }
 
   async listActivity(projectId: string, userId: string) {

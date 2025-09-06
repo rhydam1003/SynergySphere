@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BellIcon } from "@heroicons/react/24/outline";
 import { useNotificationStore } from "../../store/useNotificationStore";
+import NotificationsPanel from "./NotificationsPanel";
 
 export default function NotificationsBell({ showBadgeOnly = false }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,14 +37,7 @@ export default function NotificationsBell({ showBadgeOnly = false }) {
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
         )}
       </button>
-      {/* Placeholder panel - can be implemented later */}
-      {isOpen && (
-        <div className="absolute right-4 mt-2 w-80 bg-white rounded-xl shadow-lg p-4 border">
-          <p className="text-sm text-gray-700">
-            Notifications panel coming soon.
-          </p>
-        </div>
-      )}
+      <NotificationsPanel open={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 }

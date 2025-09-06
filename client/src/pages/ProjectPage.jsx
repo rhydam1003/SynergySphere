@@ -6,6 +6,7 @@ import TaskBoard from "../components/Tasks/TaskBoard";
 import ThreadList from "../components/Threads/ThreadList";
 import MemberList from "../components/Project/MemberList";
 import ActivityFeed from "../components/Project/ActivityFeed";
+import ProjectHeaderActions from "../components/Dashboard/ProjectHeaderActions";
 
 const tabs = [
   { name: "Board", component: TaskBoard },
@@ -36,13 +37,16 @@ export default function ProjectPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          {currentProject.name}
-        </h1>
-        {currentProject.description && (
-          <p className="mt-2 text-gray-600">{currentProject.description}</p>
-        )}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {currentProject.name}
+          </h1>
+          {currentProject.description && (
+            <p className="mt-2 text-gray-600">{currentProject.description}</p>
+          )}
+        </div>
+        <ProjectHeaderActions project={currentProject} />
       </div>
 
       <Tab.Group>

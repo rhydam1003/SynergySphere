@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/90 dark:bg-gray-900/90;
+  }
+
+  .gradient-border {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 p-[2px];
+  }
+
+  .skeleton {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700;
+  }
+
+  .task-card {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg;
+  }
+}

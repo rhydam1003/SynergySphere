@@ -19,8 +19,8 @@ export default function ThreadPage() {
         api.get(`/api/threads/${threadId}`),
         api.get(`/api/threads/${threadId}/messages`),
       ]);
-      setThread(t.data);
-      setMessages(m.data || []);
+      setThread(t?.data ?? t);
+      setMessages(m?.data ?? m ?? []);
     } finally {
       setLoading(false);
     }
@@ -34,7 +34,7 @@ export default function ThreadPage() {
     if (!body.trim()) return;
     const res = await api.post(`/api/threads/${threadId}/messages`, { body });
     setBody("");
-    setMessages((prev) => [...prev, res.data]);
+    setMessages((prev) => [...prev, res?.data ?? res]);
     setTimeout(() => {
       listRef.current?.scrollTo({
         top: listRef.current.scrollHeight,

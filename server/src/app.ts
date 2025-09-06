@@ -19,18 +19,26 @@ const swaggerDocument = YAML.load(path.join(__dirname, 'docs', 'swagger.yaml'));
 
 // Security middlewares
 app.use(helmet());
-app.use(cors({
-  origin: config.CORS_ORIGIN || '*',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: config.CORS_ORIGIN || '*',
+    credentials: true,
+  })
+);
 
-// Rate limiting
+// Rate limiting (only enable in production). Ensure JSON response for 429.
 const limiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX_REQUESTS,
-  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ error: 'Too many requests from this IP, please try again later.' });
+  },
 });
-app.use('/api', limiter);
+if (config.NODE_ENV === 'production') {
+  app.use('/api', limiter);
+}
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

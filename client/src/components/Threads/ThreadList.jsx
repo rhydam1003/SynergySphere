@@ -28,8 +28,10 @@ export default function ThreadList({ projectId: projectIdProp }) {
   const createThread = async () => {
     if (!title.trim()) return;
     const res = await api.post(`/api/projects/${projectId}/threads`, { title });
+    // Some backends return { success, data }, others return data directly
+    const newThread = res?.data ?? res;
     setTitle("");
-    setThreads((prev) => [res.data, ...prev]);
+    setThreads((prev) => [newThread, ...prev]);
   };
 
   return (

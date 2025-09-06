@@ -25,9 +25,9 @@ REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
   }')
 echo "$REGISTER_RESPONSE" | jq '.'
 
-# Extract token
-TOKEN=$(echo "$REGISTER_RESPONSE" | jq -r '.data.accessToken')
-echo -e "${BLUE}Token extracted: ${TOKEN:0:20}...${NC}"
+# Extract token from register (may be empty on duplicate)
+REGISTER_TOKEN=$(echo "$REGISTER_RESPONSE" | jq -r '.data.accessToken // empty')
+echo -e "${BLUE}Register token: ${REGISTER_TOKEN:0:20}...${NC}"
 
 # 2. Login
 echo -e "\n${GREEN}2. Logging in...${NC}"
@@ -38,6 +38,20 @@ LOGIN_RESPONSE=$(curl -s -X POST "$API_URL/auth/login" \
     "password": "Passw0rd!"
   }')
 echo "$LOGIN_RESPONSE" | jq '.'
+
+# Prefer register token; fallback to login token
+LOGIN_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.data.accessToken // empty')
+TOKEN="$REGISTER_TOKEN"
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  TOKEN="$LOGIN_TOKEN"
+fi
+
+if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+  echo -e "${BLUE}No valid access token obtained from register/login. Exiting.${NC}"
+  exit 1
+fi
+
+echo -e "${BLUE}Token in use: ${TOKEN:0:20}...${NC}"
 
 # 3. Get current user
 echo -e "\n${GREEN}3. Getting current user...${NC}"

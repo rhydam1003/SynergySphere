@@ -42,7 +42,16 @@ export const useTaskStore = create((set, get) => ({
 
   createTask: async (projectId, data) => {
     try {
-      const response = await api.post(`/api/projects/${projectId}/tasks`, data);
+      const payload = { ...data };
+      if (payload.dueDate) {
+        try {
+          payload.dueDate = new Date(payload.dueDate).toISOString();
+        } catch {}
+      }
+      const response = await api.post(
+        `/api/projects/${projectId}/tasks`,
+        payload
+      );
       set((state) => ({ tasks: [...state.tasks, response.data] }));
       toast.success("Task created");
       return response.data;
@@ -54,7 +63,13 @@ export const useTaskStore = create((set, get) => ({
 
   updateTask: async (taskId, data) => {
     try {
-      const response = await api.patch(`/api/tasks/${taskId}`, data);
+      const payload = { ...data };
+      if (payload.dueDate) {
+        try {
+          payload.dueDate = new Date(payload.dueDate).toISOString();
+        } catch {}
+      }
+      const response = await api.patch(`/api/tasks/${taskId}`, payload);
       set((state) => ({
         tasks: state.tasks.map((t) => (t._id === taskId ? response.data : t)),
         currentTask:

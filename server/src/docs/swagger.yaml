@@ -1,0 +1,371 @@
+openapi: 3.0.0
+info:
+  title: SynergySphere API
+  version: 1.0.0
+  description: Advanced Team Collaboration Platform API
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [admin, manager, member]
+        settings:
+          type: object
+          properties:
+            notificationsEnabled:
+              type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Project:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: string
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+              role:
+                type: string
+                enum: [manager, member]
+              joinedAt:
+                type: string
+                format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+        project:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        assignee:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        dueDate:
+          type: string
+          format: date-time
+        priority:
+          type: string
+          enum: [low, medium, high]
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        409:
+          description: Email already registered
+
+  /auth/login:
+    post:
+      summary: Login user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        401:
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      summary: Get current user
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+
+  /projects:
+    post:
+      summary: Create a new project
+      tags: [Projects]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 2000
+      responses:
+        201:
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Project'
+        401:
+          description: Unauthorized
+
+    get:
+      summary: Get all projects for current user
+      tags: [Projects]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        401:
+          description: Unauthorized
+
+  /projects/{projectId}/tasks:
+    post:
+      summary: Create a new task
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                description:
+                  type: string
+                  maxLength: 5000
+                assignee:
+                  type: string
+                status:
+                  type: string
+                  enum: [todo, in_progress, done]
+                dueDate:
+                  type: string
+                  format: date-time
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        201:
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized
+        404:
+          description: Project not found
+
+    get:
+      summary: Get all tasks for a project
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [todo, in_progress, done]
+        - in: query
+          name: assignee
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized
+        404:
+          description: Project not found

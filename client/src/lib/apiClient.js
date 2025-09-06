@@ -27,16 +27,33 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      let parsed;
+      try {
+        if (contentType.includes("application/json")) {
+          parsed = await response.json();
+        } else {
+          parsed = await response.text();
+        }
+      } catch {
+        parsed = null;
+      }
 
       if (!response.ok) {
         if (response.status === 401) {
           this.handleUnauthorized();
         }
-        throw new Error(data.error || "API request failed");
+        const message =
+          (parsed && parsed.error) ||
+          (typeof parsed === "string" && parsed) ||
+          `Request failed (${response.status})`;
+        const err = new Error(message);
+        err.status = response.status;
+        throw err;
       }
 
-      return data;
+      // Normalize return to parsed JSON or text
+      return parsed;
     } catch (error) {
       console.error("API Error:", error);
       throw error;

@@ -1,18 +1,34 @@
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import TextInput from "../components/Common/TextInput";
 import Button from "../components/Common/Button";
 import { api } from "../lib/apiClient";
 
-export default function ForgotPasswordPage() {
+const schema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export default function ResetPasswordPage() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const token = params.get("token") || "";
+
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
-  } = useForm();
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
 
   const onSubmit = async (data) => {
-    await api.post("/api/auth/forgot-password", data);
-    alert("If the email exists, a reset link was sent.");
+    await api.post("/api/auth/reset-password", {
+      token,
+      password: data.password,
+    });
+    navigate("/login");
   };
 
   return (
@@ -21,24 +37,18 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Forgot Password
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Enter your email to receive a reset link
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Reset Password</h1>
           </div>
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <TextInput
-              type="email"
-              label="Email"
-              placeholder="john@example.com"
-              {...register("email")}
+              type="password"
+              label="New Password"
+              {...register("password")}
+              error={errors.password?.message}
+              placeholder="New strong password"
             />
-
             <Button type="submit" className="w-full" loading={isSubmitting}>
-              Send Reset Link
+              Reset Password
             </Button>
           </form>
         </div>
